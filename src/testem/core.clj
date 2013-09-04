@@ -12,6 +12,10 @@
 ;; that one wants to test against different configurations/combinations of artifacts. This holds, 
 ;; most prominently, for different Clojure versions but can be extended to anything one wants
 ;; to be compatible to.
+;;
+;; Also, if an artifact is encountered that is not contained within the top-level dependencies,
+;; it might be a concrete implementation of an abstract facade (e.g. of slf4j) and should thus be 
+;; tested, too.
 
 ;; ## Utilities
 
@@ -62,8 +66,7 @@
     ;; filter duplicate overwrite maps
     (->> profile-map
       (group-by second)
-      (map (juxt (comp first first second) first))
-      (into {}))))
+      (map (comp first first second)))))
 
 ;; ## Test
 

@@ -28,8 +28,6 @@
 
 (fact "about `overwriting-profiles`"
   (let [artifact-map (project-artifacts test-project-data)
-        profile-map (overwriting-profiles artifact-map)]
-    (or (:old profile-map) (:1.4 profile-map)) => '{org.clojure/clojure "1.4.0"}
-    (:1.6 profile-map) => '{org.clojure/clojure "1.6.0-master-SNAPSHOT"}
-    (:1.4+ profile-map) => '{org.clojure/clojure "1.4.0" some-logging "0.1.0"}
-    (:log profile-map) => '{some-logging "0.1.0"}))
+        profiles (overwriting-profiles artifact-map)]
+    profiles => (contains [:1.6 :1.4+ :log])
+    (set profiles) => #(or (contains? % :1.4) (contains? % :old))))

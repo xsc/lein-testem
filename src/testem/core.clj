@@ -150,5 +150,5 @@
         (let [profile-string (create-with-profile-string profiles artifact-profiles)]
           (vector framework
                   {:test (create-task profile-string test)
-                   :autotest (create-task profile-string autotest)})))
+                   :autotest (create-task (clojure.string/join "," (map name profiles)) autotest)})))
       (into {}))))

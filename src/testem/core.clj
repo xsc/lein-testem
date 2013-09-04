@@ -68,13 +68,87 @@
       (group-by second)
       (map (comp first first second)))))
 
-;; ## Test
+(defn combine-profiles
+  "Create profile vectors based on a base vector and a series of profiles to append."
+  [base profiles]
+  (->> profiles
+    (map vector)
+    (cons nil)
+    (map #(concat base %))
+    (map (comp reverse distinct reverse))
+    (distinct)))
 
-(def T  {:dependencies '[[org.clojure/clojure "1.5.1"]  [b "1.0.0"] [c "0.1.0"]]
-         :profiles  {:x  {:dependencies '[[org.clojure/clojure "1.4.0"]  [b "1.0.0"]]} 
-                     :y  {:dependencies '[[org.clojure/clojure "1.4.0"]  [b "1.0.0"]  [c "0.1.1"]]}
-                     :yy {:dependencies '[[org.clojure/clojure "1.4.0"]  [b "1.0.0"]  [c "0.1.1"]]}
-                     :z  {:dependencies '[[d "0.1"]]}
-                     }})
+;; ## Test Frameworks
 
-(def P (project-artifacts T))
+(defn find-artifact
+  "Return vector with first profile containing the given artifact."
+  [artifact-map k artifact]
+  (when-let [profiles (get-in artifact-map [k artifact])]
+    [(first (keys profiles))]))
+
+(def ^:private frameworks
+  "Map of frameworks with detect function, included frameworks and test/autotest tasks."
+  {:midje {:detect (fn [artifact-map] 
+                     (when-let [midje-plugin (find-artifact artifact-map :plugins 'lein-midje)]
+                       (if-let [midje-dep (find-artifact artifact-map :dependencies 'midje)]
+                         (distinct (cons :dev (concat midje-dep midje-plugin)))
+                         (println "WARN: plugin 'lein-midje' given, but dependency 'midje' not found."))))
+           :includes [:clojure.test]
+           :test ["midje"]
+           :autotest ["midje" ":autotest"]}
+   :speclj {:detect (fn [artifact-map] 
+                     (when-let [speclj-plugin (find-artifact artifact-map :plugins 'speclj)]
+                       (if-let [speclj-dep (find-artifact artifact-map :dependencies 'speclj)]
+                         (distinct (cons :dev (concat speclj-dep speclj-plugin)))
+                         (println "WARN: plugin 'speclj' given, but dependency 'speclj' not found."))))
+           :includes []
+           :test ["spec"]
+           :autotest ["spec" "-a"]}
+   :clojure.test {:detect (constantly [:dev])
+                  :includes []
+                  :test ["test"]
+                  :autotest nil}})
+
+(defn detect-frameworks
+  "Return map of frameworks applicable to a given artifact map."
+  [artifact-map]
+  (reduce
+    (fn [r [framework {:keys [detect] :as fw}]]
+      (or 
+        (when-not (some #(contains? (set (:includes (second %))) framework) r)
+          (when-let [profiles (detect artifact-map)]
+            (assoc r framework (assoc fw :profiles profiles))))
+        r))
+    {} frameworks))
+    
+;; ## Putting it all together!
+
+(defn create-with-profile-string
+  "Create profile string from base profiles and profiles-to-test."
+  [test-profiles artifact-profiles]
+  (->> (combine-profiles test-profiles artifact-profiles)
+    (map #(map name %))
+    (map #(clojure.string/join "," %))
+    (clojure.string/join ":")))
+
+(defn create-task
+  "Create vector representing a call of 'with-profile' using the given profile string
+   and task (a vector)."
+  [profile-string task]
+  (when task
+    (vec (list* "with-profile" profile-string task))))
+
+(defn create-test-tasks
+  "Create map associating a test framework with different Leiningen calls that can be used to test
+   the given project."
+  [project-map]
+  (let [artifacts (project-artifacts project-map)
+        artifact-profiles (overwriting-profiles artifacts)
+        frameworks (detect-frameworks artifacts)]
+    (->>
+      (for [[framework {:keys [profiles test autotest]}] frameworks]
+        (let [profile-string (create-with-profile-string profiles artifact-profiles)]
+          (vector framework
+                  {:test (create-task profile-string test)
+                   :autotest (create-task profile-string autotest)})))
+      (into {}))))

@@ -8,10 +8,10 @@
 ;; Aside from detecting test frameworks (and the profiles necessary to execute them), 
 ;; lein-testem wants to facilitate testing against different versions of libraries.
 ;;
-;; If I have a certain dependency in more than one profile (and those profiles are not
-;; identical) it is safe to assume I want to test against different configurations/combinations
-;; of artifacts. This holds, most prominently, for different Clojure versions but can be extended
-;; to things like logging implementations, network libraries, etc...
+;; If a profile overwrites an artifact in the top-level dependencies, it is safe to assume
+;; that one wants to test against different configurations/combinations of artifacts. This holds, 
+;; most prominently, for different Clojure versions but can be extended to anything one wants
+;; to be compatible to.
 
 ;; ## Utilities
 
@@ -44,23 +44,34 @@
     (map (juxt identity (partial create-profile-artifact-map project)))
     (into {})))
 
-(defn find-overwritten-dependencies
-  "Find dependencies that are available in the user profile and at least in one
-   other profile, using a different version. Input is a map created by `project-artifacts`."
+(defn overwriting-profiles
+  "Create map of `{ profile { overwritten-artifact new-version ... } ... }` based on a map
+   created by `project-artifacts`. This will also include artifacts that are not in the 
+   top-level dependencies."
   [{:keys [dependencies] :as artifact-map}]
-  (->> dependencies
-    (map
-      (fn [[artifact profiles]]
-        [artifact (->> profiles
-                    (filter (comp not #{(profiles nil)} second))
-                    (into {}))]))
-    (filter (comp not empty? second))
-    (into {})))
+  (let [profile-map (reduce
+                      (fn [m [artifact profiles]]
+                        (let [initial-version (profiles nil)]
+                          (reduce
+                            (fn [m [profile version]]
+                              (if (= version initial-version)
+                                m
+                                (assoc-in m [profile artifact] version)))
+                            m profiles)))
+                      {} dependencies)]
+    ;; filter duplicate overwrite maps
+    (->> profile-map
+      (group-by second)
+      (map (juxt (comp first first second) first))
+      (into {}))))
 
 ;; ## Test
 
-(def T  {:dependencies '[[a 0]  [b 0] [c 2]]
-         :profiles  {:x  {:dependencies '[[a 1]  [b 0]]} 
-                     :y  {:dependencies '[[a 1]  [b 0]  [c 3]]}}})
+(def T  {:dependencies '[[org.clojure/clojure "1.5.1"]  [b "1.0.0"] [c "0.1.0"]]
+         :profiles  {:x  {:dependencies '[[org.clojure/clojure "1.4.0"]  [b "1.0.0"]]} 
+                     :y  {:dependencies '[[org.clojure/clojure "1.4.0"]  [b "1.0.0"]  [c "0.1.1"]]}
+                     :yy {:dependencies '[[org.clojure/clojure "1.4.0"]  [b "1.0.0"]  [c "0.1.1"]]}
+                     :z  {:dependencies '[[d "0.1"]]}
+                     }})
 
 (def P (project-artifacts T))

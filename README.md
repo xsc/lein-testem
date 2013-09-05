@@ -16,7 +16,7 @@ __Leiningen__ ([via Clojars](https://clojars.org/lein-testem))
 Put the following into the `:plugins` vector of the `:user` profile in your `~/.lein/profiles.clj`:
 
 ```clojure
-[lein-testem "0.1.0-alpha1"]
+[lein-testem "0.1.0-alpha2"]
 ```
 
 This plugin is destined for Leiningen >= 2.0.0.

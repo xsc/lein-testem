@@ -1,4 +1,4 @@
-(defproject lein-testem "0.1.0-alpha1"
+(defproject lein-testem "0.1.0-alpha2"
   :description "Minimal-Configuration Testing for Clojure."
   :url "https://github.com/xsc/lein-testem"
   :license {:name "Eclipse Public License"

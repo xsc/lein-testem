@@ -6,6 +6,9 @@ with reduced configuration effort.
 [![Build Status](https://travis-ci.org/xsc/lein-ancient.png)](https://travis-ci.org/xsc/lein-ancient)
 [![endorse](https://api.coderwall.com/xsc/endorsecount.png)](https://coderwall.com/xsc)
 
+__Experimental!__ This project is in flux and by no means stable (or maybe it is, no one knows yet).
+Feel free to open issues to help with lein-testem's development!
+
 ## Usage
 
 __Leiningen__ ([via Clojars](https://clojars.org/lein-testem))
@@ -13,7 +16,7 @@ __Leiningen__ ([via Clojars](https://clojars.org/lein-testem))
 Put the following into the `:plugins` vector of the `:user` profile in your `~/.lein/profiles.clj`:
 
 ```clojure
-[lein-testem "0.1.0"]
+[lein-testem "0.1.0-alpha1"]
 ```
 
 This plugin is destined for Leiningen >= 2.0.0.

@@ -23,16 +23,49 @@ This plugin is destined for Leiningen >= 2.0.0.
 
 __Command Line__
 
-You can use lein-testem to automatically detect your current test framework(s) and run all available tests.
+You can use lein-testem to automatically detect your current test framework(s) and run available tests.
 
 ```bash
 $ lein testem 
+```
+
+The plugin will create profile combinations for testing by looking for those that overwrite/extend the 
+top-level dependencies. Let's assume your `project.clj` looks like this:
+
+```clojure
+(defproject my-project "0.1.0-SNAPSHOT"
+  ...
+  :dependencies [[org.clojure/clojure "1.5.1"] ...]
+  :profiles {:test {:dependencies [[midje "1.5.1"]]
+                    :plugins [[lein-midje "3.1.1"]]}
+             :1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}}
+  ...)
+```
+
+lein-testem will detect that you're using Midje (in the profile `:test`) for testing and that the 
+profile `:1.4` overwrites the artifact `org.clojure/clojure` of the top-level dependencies. It will
+then create a command similar to the following:
+
+```bash
+$ lein with-profile dev,test:dev,test,1.4 midje
+```
+
+You can run autotest functionality where available:
+
+```bash
+$ lein testem :autotest
 ```
 
 ## Supported Frameworks
 
 - [clojure.test](http://richhickey.github.io/clojure/clojure.test-api.html)
 - [midje](https://github.com/marick/midje)
+- [Speclj](http://speclj.com)
+- ...
+
+## Roadmap
+
+- automatically provide/run common test scenarios (e.g. "test against Clojure versions >= 1.3.0")
 - ...
 
 ## License

@@ -88,26 +88,26 @@
 
 (def ^:private frameworks
   "Map of frameworks with detect function, included frameworks and test/autotest tasks."
-  {:midje {:detect (fn [artifact-map] 
-                     (when-let [midje-plugin (find-artifact artifact-map :plugins 'lein-midje)]
-                       (if-let [midje-dep (find-artifact artifact-map :dependencies 'midje)]
-                         (distinct (cons :dev (concat midje-dep midje-plugin)))
-                         (println "WARN: plugin 'lein-midje' given, but dependency 'midje' not found."))))
-           :includes [:clojure.test]
-           :test ["midje"]
-           :autotest ["midje" ":autotest"]}
-   :speclj {:detect (fn [artifact-map] 
-                     (when-let [speclj-plugin (find-artifact artifact-map :plugins 'speclj)]
-                       (if-let [speclj-dep (find-artifact artifact-map :dependencies 'speclj)]
-                         (distinct (cons :dev (concat speclj-dep speclj-plugin)))
-                         (println "WARN: plugin 'speclj' given, but dependency 'speclj' not found."))))
-           :includes []
-           :test ["spec"]
-           :autotest ["spec" "-a"]}
-   :clojure.test {:detect (constantly [:dev])
-                  :includes []
-                  :test ["test"]
-                  :autotest nil}})
+  [[:midje {:detect (fn [artifact-map] 
+                      (when-let [midje-plugin (find-artifact artifact-map :plugins 'lein-midje)]
+                        (if-let [midje-dep (find-artifact artifact-map :dependencies 'midje)]
+                          (distinct (cons :dev (concat midje-dep midje-plugin)))
+                          (println "WARN: plugin 'lein-midje' given, but dependency 'midje' not found."))))
+            :includes [:clojure.test]
+            :test ["midje"]
+            :autotest ["midje" ":autotest"]}]
+   [:speclj {:detect (fn [artifact-map] 
+                       (when-let [speclj-plugin (find-artifact artifact-map :plugins 'speclj)]
+                         (if-let [speclj-dep (find-artifact artifact-map :dependencies 'speclj)]
+                           (distinct (cons :dev (concat speclj-dep speclj-plugin)))
+                           (println "WARN: plugin 'speclj' given, but dependency 'speclj' not found."))))
+             :includes []
+             :test ["spec"]
+             :autotest ["spec" "-a"]}]
+   [:clojure.test {:detect (constantly [:dev])
+                   :includes []
+                   :test ["test"]
+                   :autotest nil}]])
 
 (defn detect-frameworks
   "Return map of frameworks applicable to a given artifact map."

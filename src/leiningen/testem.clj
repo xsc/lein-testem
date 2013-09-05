@@ -1,11 +1,22 @@
-(ns ^{ :doc "A Leiningen plugin to test your projects with reduced configuration effort."
+(ns ^{ :doc "Run Tests on your Projects with minimal Configuration."
        :author "Yannick Scherer"}
   leiningen.testem
   (:require [testem.core :refer [create-test-tasks]]
             [leiningen.core.main :as main]))
 
 (defn ^:higher-order testem
-  "I don't do a lot."
+  "Run Tests on your Projects with minimal Configuration.
+
+   Usage:
+
+     lein testem [:autotest]
+
+   Supported Test Frameworks:
+
+     clojure.test
+     midje        (https://github.com/marick/Midje)
+     speclj       (http://speclj.com)
+  "
   [project & args]
   (let [tasks (create-test-tasks project)
         autotest? (contains? (set args) ":autotest")]

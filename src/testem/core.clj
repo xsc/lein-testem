@@ -71,16 +71,18 @@
 (defn combine-profiles
   "Create profile vectors based on a base vector and a series of profiles to append."
   [base profiles]
-  (->> profiles
-    (map vector)
-    (cons nil)
-    (map #(concat base %))
-    (map (comp reverse distinct reverse))
-    (distinct)))
+  (let [base (filter (complement nil?) base)]
+    (->> profiles
+      (filter (complement nil?))
+      (map vector)
+      (cons nil)
+      (map #(concat base %))
+      (map (comp reverse distinct reverse))
+      (distinct))))
 
 ;; ## Test Frameworks
 
-(defn find-artifact
+(defn- find-artifact
   "Return vector with first profile containing the given artifact."
   [artifact-map k artifact]
   (when-let [profiles (get-in artifact-map [k artifact])]
@@ -123,7 +125,7 @@
     
 ;; ## Putting it all together!
 
-(defn create-with-profile-string
+(defn- create-with-profile-string
   "Create profile string from base profiles and profiles-to-test."
   [test-profiles artifact-profiles]
   (->> (combine-profiles test-profiles artifact-profiles)
@@ -131,7 +133,7 @@
     (map #(clojure.string/join "," %))
     (clojure.string/join ":")))
 
-(defn create-task
+(defn- create-task
   "Create vector representing a call of 'with-profile' using the given profile string
    and task (a vector)."
   [profile-string task]
@@ -150,5 +152,10 @@
         (let [profile-string (create-with-profile-string profiles artifact-profiles)]
           (vector framework
                   {:test (create-task profile-string test)
-                   :autotest (create-task (clojure.string/join "," (map name profiles)) autotest)})))
+                   :autotest (create-task 
+                               (->> profiles
+                                 (filter (complement nil?))
+                                 (map name)
+                                 (clojure.string/join ","))
+                               autotest)})))
       (into {}))))

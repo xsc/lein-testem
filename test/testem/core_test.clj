@@ -13,6 +13,8 @@
                :log {:dependencies [[some-logging "0.1.0"]]}
                :legacy {:plugins [[lein-something "0.8.0"]]}}})
 
+;; ## Basic Tests
+
 (fact "about `project-artifacts`"
   (project-artifacts test-project-data)
       => '{:dependencies {org.clojure/clojure {nil "1.5.1" 
@@ -31,3 +33,72 @@
         profiles (overwriting-profiles artifact-map)]
     profiles => (contains [:1.6 :1.4+ :log])
     (set profiles) => #(or (contains? % :1.4) (contains? % :old))))
+
+(fact "about `combine-profiles`"
+  (combine-profiles [:dev] [:x :y :z]) => [[:dev] [:dev :x] [:dev :y] [:dev :z]])
+
+
+;; ## Detection
+
+(tabular
+  (fact "about `detect-frameworks`"
+    (let [artifacts (project-artifacts ?project)
+          frameworks (detect-frameworks artifacts)]
+      (set (keys frameworks)) => (set ?fw)))
+  ?project                               ?fw
+  '{:dependencies [[midje "1.5.1"]]
+    :plugins [[lein-midje "3.1.1"]]}     [:midje]
+  '{:dependencies [[speclj "1.5.1"]]
+    :plugins [[speclj "3.1.1"]]}         [:speclj :clojure.test]
+  '{}                                    [:clojure.test])
+
+
+;; ## Task Creation
+
+(tabular
+  (fact "about `create-test-tasks`"
+    (let [tasks (create-test-tasks ?project)]
+      (set (filter (complement nil?) (map :test (vals tasks)))) => (set ?test)
+      (set (filter (complement nil?) (map :autotest (vals tasks)))) => (set ?autotest)))
+  ?project ?test ?autotest
+  '{:dependencies [[midje "1.5.1"]]
+    :plugins [[lein-midje "3.1.1"]]}
+  [["with-profile" "dev" "midje"]] 
+  [["with-profile" "dev" "midje" ":autotest"]]
+
+  '{:dependencies [[midje "1.5.1"] [org.clojure/clojure "1.5.1"]]
+    :plugins [[lein-midje "3.1.1"]]
+    :profiles {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}}}
+  [["with-profile" "dev:dev,1.4" "midje"]] 
+  [["with-profile" "dev" "midje" ":autotest"]]
+
+  '{:dependencies [[midje "1.5.1"] [org.clojure/clojure "1.5.1"]]
+    :plugins [[lein-midje "3.1.1"]]
+    :profiles {:log {:dependencies [[logback "1.4.0"]]}}}
+  [["with-profile" "dev:dev,log" "midje"]] 
+  [["with-profile" "dev" "midje" ":autotest"]]
+
+  '{:dependencies [[org.clojure/clojure "1.5.1"]]
+    :profiles {:test {:dependencies [[midje "1.5.1"]]
+                      :plugins [[lein-midje "3.1.1"]]}
+               :1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}}}  
+  [["with-profile" "dev,test:dev,test,1.4" "midje"]] 
+  [["with-profile" "dev,test" "midje" ":autotest"]]
+
+  '{:dependencies [[speclj "1.5.1"]]
+    :plugins [[speclj "3.1.1"]]}
+  [["with-profile" "dev" "spec"] ["with-profile" "dev" "test"]] 
+  [["with-profile" "dev" "spec" "-a"]]
+
+  '{:dependencies [[speclj "1.5.1"] [org.clojure/clojure "1.5.1"]]
+    :plugins [[speclj "3.1.1"]]
+    :profiles {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}}}
+  [["with-profile" "dev:dev,1.4" "spec"] ["with-profile" "dev:dev,1.4" "test"]] 
+  [["with-profile" "dev" "spec" "-a"]]
+
+  '{:dependencies [[speclj "1.5.1"] [org.clojure/clojure "1.5.1"]]
+    :plugins [[speclj "3.1.1"]]
+    :profiles {:log {:dependencies [[logback "1.4.0"]]}}}
+  [["with-profile" "dev:dev,log" "spec"] ["with-profile" "dev:dev,log" "test"]] 
+  [["with-profile" "dev" "spec" "-a"]]
+  )

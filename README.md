@@ -3,7 +3,7 @@
 A [Leiningen](https://github.com/technomancy/leiningen) plugin that let's you test your Clojure projects
 with reduced configuration effort.
 
-[![Build Status](https://travis-ci.org/xsc/lein-testem.png)](https://travis-ci.org/xsc/lein-ancient)
+[![Build Status](https://travis-ci.org/xsc/lein-testem.png)](https://travis-ci.org/xsc/lein-testem)
 [![endorse](https://api.coderwall.com/xsc/endorsecount.png)](https://coderwall.com/xsc)
 
 __Experimental!__ This project is in flux and by no means stable (or maybe it is, no one knows yet).

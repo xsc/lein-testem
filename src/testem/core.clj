@@ -1,7 +1,7 @@
 (ns ^{ :doc "Framework Detection for lein-testem."
        :author "Yannick Scherer" }
   testem.core
-  (:require [clojure.math.combinatorics :refer [subsets permutations]]))
+  (:require [version-clj.core :refer [version-compare]]))
 
 ;; ## Concept
 ;;
@@ -80,28 +80,37 @@
       (map (comp reverse distinct reverse))
       (distinct))))
 
+;; ## Constants
+
+(def ^:private ^:const MIDJE_MIN_VERSION "3.1.1")
+
 ;; ## Test Frameworks
 
 (defn- find-artifact
-  "Return vector with first profile containing the given artifact."
+  "Return vector with first profile containing the given artifact, and the artifact
+   version."
   [artifact-map k artifact]
   (when-let [profiles (get-in artifact-map [k artifact])]
-    [(first (keys profiles))]))
+    (let [k (first (keys profiles))]
+      (vector k (get profiles k)))))
+
 
 (def ^:private frameworks
   "Map of frameworks with detect function, included frameworks and test/autotest tasks."
   [[:midje {:detect (fn [artifact-map] 
-                      (when-let [midje-plugin (find-artifact artifact-map :plugins 'lein-midje)]
-                        (if-let [midje-dep (find-artifact artifact-map :dependencies 'midje)]
-                          (distinct (cons :dev (concat midje-dep midje-plugin)))
-                          (println "WARN: plugin 'lein-midje' given, but dependency 'midje' not found."))))
+                      (when-let [[plugin-profile plugin-version] (find-artifact artifact-map :plugins 'lein-midje)]
+                        (if-not (>= (version-compare plugin-version MIDJE_MIN_VERSION) 0)
+                          (println "WARN: lein-testem only works with midje > 3.1.1")
+                          (if-let [[dep-profile _] (find-artifact artifact-map :dependencies 'midje)]
+                            (distinct [:dev plugin-profile dep-profile])
+                            (println "WARN: plugin 'lein-midje' given, but dependency 'midje' not found.")))))
             :includes [:clojure.test]
             :test ["midje"]
             :autotest ["midje" ":autotest"]}]
    [:speclj {:detect (fn [artifact-map] 
-                       (when-let [speclj-plugin (find-artifact artifact-map :plugins 'speclj)]
-                         (if-let [speclj-dep (find-artifact artifact-map :dependencies 'speclj)]
-                           (distinct (cons :dev (concat speclj-dep speclj-plugin)))
+                       (when-let [[plugin-profile _] (find-artifact artifact-map :plugins 'speclj)]
+                         (if-let [[dep-profile] (find-artifact artifact-map :dependencies 'speclj)]
+                           (distinct [:dev plugin-profile dep-profile])
                            (println "WARN: plugin 'speclj' given, but dependency 'speclj' not found."))))
              :includes []
              :test ["spec"]

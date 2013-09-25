@@ -82,7 +82,7 @@
 
 ;; ## Constants
 
-(def ^:private ^:const MIDJE_MIN_VERSION "3.1.1")
+(def ^:private ^:const MIDJE_MIN_VERSION "3.1.2")
 
 ;; ## Test Frameworks
 
@@ -100,7 +100,7 @@
   [[:midje {:detect (fn [artifact-map] 
                       (when-let [[plugin-profile plugin-version] (find-artifact artifact-map :plugins 'lein-midje)]
                         (if-not (>= (version-compare plugin-version MIDJE_MIN_VERSION) 0)
-                          (println "WARN: lein-testem only works with midje > 3.1.1")
+                          (println "WARN: lein-testem only works with midje >=" MIDJE_MIN_VERSION)
                           (if-let [[dep-profile _] (find-artifact artifact-map :dependencies 'midje)]
                             (distinct [:dev plugin-profile dep-profile])
                             (println "WARN: plugin 'lein-midje' given, but dependency 'midje' not found.")))))
@@ -134,12 +134,16 @@
     
 ;; ## Putting it all together!
 
-(defn- create-with-profile-string
-  "Create profile string from base profiles and profiles-to-test."
+(defn- create-with-profile-elements
   [test-profiles artifact-profiles]
   (->> (combine-profiles test-profiles artifact-profiles)
     (map #(map name %))
-    (map #(clojure.string/join "," %))
+    (map #(clojure.string/join "," %))))
+
+(defn- create-with-profile-string
+  "Create profile string from base profiles and profiles-to-test."
+  [test-profiles artifact-profiles]
+  (->> (create-with-profile-elements test-profiles artifact-profiles)
     (clojure.string/join ":")))
 
 (defn- create-task
@@ -168,3 +172,23 @@
                                  (clojure.string/join ","))
                                autotest)})))
       (into {}))))
+
+(defn create-single-test-tasks
+  "Like `create-test-tasks` but the `:test` key of a single framework will contain
+   a seq of tasks."
+  [project-map]
+  (let [artifacts (project-artifacts project-map)
+        artifact-profiles (overwriting-profiles artifacts)
+        frameworks (detect-frameworks artifacts)]
+    (->>
+      (for [[framework {:keys [profiles test autotest]}] frameworks]
+        (let [profile-strings (create-with-profile-elements profiles artifact-profiles)]
+          (vector framework
+                  {:test (map #(create-task % test) profile-strings)
+                   :autotest (create-task 
+                               (->> profiles
+                                 (filter (complement nil?))
+                                 (map name)
+                                 (clojure.string/join ","))
+                               autotest)})))
+      (into {}))) )

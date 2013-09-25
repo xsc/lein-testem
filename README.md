@@ -16,7 +16,7 @@ __Leiningen__ ([via Clojars](https://clojars.org/lein-testem))
 Put the following into the `:plugins` vector of the `:user` profile in your `~/.lein/profiles.clj`:
 
 ```clojure
-[lein-testem "0.1.0-alpha2"]
+[lein-testem "0.1.0-alpha3"]
 ```
 
 This plugin is destined for Leiningen >= 2.0.0.
@@ -59,7 +59,7 @@ $ lein testem :autotest
 ## Supported Frameworks
 
 - [clojure.test](http://richhickey.github.io/clojure/clojure.test-api.html)
-- [midje](https://github.com/marick/midje)
+- [midje](https://github.com/marick/midje) (with lein-midje >= 3.1.2)
 - [Speclj](http://speclj.com)
 - ...
 

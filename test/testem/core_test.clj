@@ -47,7 +47,7 @@
       (set (keys frameworks)) => (set ?fw)))
   ?project                               ?fw
   '{:dependencies [[midje "1.5.1"]]
-    :plugins [[lein-midje "3.1.2"]]}     [:midje]
+    :plugins [[lein-midje "3.1.3"]]}     [:midje]
   '{:dependencies [[speclj "1.5.1"]]
     :plugins [[speclj "3.1.1"]]}         [:speclj :clojure.test]
   '{}                                    [:clojure.test])
@@ -62,25 +62,25 @@
       (set (filter (complement nil?) (map :autotest (vals tasks)))) => (set ?autotest)))
   ?project ?test ?autotest
   '{:dependencies [[midje "1.5.1"]]
-    :plugins [[lein-midje "3.1.2"]]}
+    :plugins [[lein-midje "3.1.3"]]}
   [["with-profile" "dev" "midje"]] 
   [["with-profile" "dev" "midje" ":autotest"]]
 
   '{:dependencies [[midje "1.5.1"] [org.clojure/clojure "1.5.1"]]
-    :plugins [[lein-midje "3.1.2"]]
+    :plugins [[lein-midje "3.1.3"]]
     :profiles {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}}}
   [["with-profile" "dev:dev,1.4" "midje"]] 
   [["with-profile" "dev" "midje" ":autotest"]]
 
   '{:dependencies [[midje "1.5.1"] [org.clojure/clojure "1.5.1"]]
-    :plugins [[lein-midje "3.1.2"]]
+    :plugins [[lein-midje "3.1.3"]]
     :profiles {:log {:dependencies [[logback "1.4.0"]]}}}
   [["with-profile" "dev:dev,log" "midje"]] 
   [["with-profile" "dev" "midje" ":autotest"]]
 
   '{:dependencies [[org.clojure/clojure "1.5.1"]]
     :profiles {:test {:dependencies [[midje "1.5.1"]]
-                      :plugins [[lein-midje "3.1.2"]]}
+                      :plugins [[lein-midje "3.1.3"]]}
                :1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}}}  
   [["with-profile" "dev,test:dev,test,1.4" "midje"]] 
   [["with-profile" "dev,test" "midje" ":autotest"]]
@@ -107,7 +107,7 @@
   (let [tasks (create-single-test-tasks 
                 '{:dependencies [[org.clojure/clojure "1.5.1"]]
                   :profiles {:test {:dependencies [[midje "1.5.1"]]
-                                    :plugins [[lein-midje "3.1.2"]]}
+                                    :plugins [[lein-midje "3.1.3"]]}
                              :1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}}})]
     (keys tasks) => [:midje]
     (get-in tasks [:midje :autotest]) => ["with-profile" "dev,test" "midje" ":autotest"]

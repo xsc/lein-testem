@@ -99,8 +99,6 @@
   "Map of frameworks with detect function, included frameworks and test/autotest tasks."
   [[:midje {:detect (fn [artifact-map] 
                       (when-let [[plugin-profile plugin-version] (find-artifact artifact-map :plugins 'lein-midje)]
-                        (when-not (>= (version-compare plugin-version MIDJE_MIN_VERSION) 0)
-                          (println "WARN: lein-testem will only work correctly with lein-midje >=" MIDJE_MIN_VERSION))
                         (if-let [[dep-profile _] (find-artifact artifact-map :dependencies 'midje)]
                           (distinct [:dev plugin-profile dep-profile])
                           (println "WARN: plugin 'lein-midje' given, but dependency 'midje' not found."))))
